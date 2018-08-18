@@ -1,0 +1,202 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+Welcome!
+{% endblock title %}
+
+{% block content %}
+  <div id="app" v-cloak>
+    <transition name="slide-fade" mode="out-in">
+      <div v-if="!showList" key="lists" class="page">
+        <div id="list-input">
+          <input
+            type="text"
+            @keypress="submitList"
+            class="input is-rounded"
+            placeholder="Create a To Do List..."
+          >
+        </div>
+        <transition-group
+          name="staggered-fade"
+          tag="div"
+          :css="false"
+          v-on:before-enter="beforeEnter"
+          v-on:enter="enter"
+          v-on:leave="leave"
+        >
+          <div
+            class="list"
+            v-for="(list, i) in lists"
+            :key=list.id
+            @click="setCurrentList(i)"
+            :data-index="i"
+          >
+            <div class="link">[[ list.title ]]</div>
+          </div>
+        </transition-group>
+      </div>
+      <div v-else key="list" class="page">
+        <div class="close" @click="showList = false">❌</div>
+        <div class="is-size-3">[[ currentList.title ]]</div>
+        <hr />
+        <div id="item-input">
+          <input
+            type="text"
+            @keypress="submitItem"
+            class="input is-rounded"
+            placeholder="Add an item..."
+          >        
+        </div>
+        <transition-group
+          name="staggered-fade"
+          tag="div"
+        >
+          <div
+            v-for="(item, i) in currentList.todo_items"
+            :key="item.id"
+            class="item"
+            :class="{completed: item.completed}"
+          >
+            <div>[[ item.task ]]</div>
+            <div class="item-options">
+              <div>
+                <input
+                  class="toggle-completed"
+                  type="checkbox"
+                  @click="toggleItem(i)"
+                  v-model="item.completed"
+                >
+              </div>
+              <div>
+                <button 
+                  class="delete"
+                  @click="deleteItem(i)"
+                >
+                  ❌
+                </button>
+              </div>
+            </div>
+          </div>
+        </transition-group>
+      </div>
+    </transition>
+  </div>
+{% endblock content %}
+
+{% block scripts %}
+<script>
+new Vue({
+  el: '#app',
+  delimiters: ['[[', ']]'],
+  data: {
+    lists: [],
+    showList: false,
+    currentList: null,
+  },
+  created() {
+    axios.get('/lists')
+      .then((response) => {
+        this.lists = response.data
+      })
+  },
+  methods: {
+    submitList(e) {
+      if (e.keyCode === 13) {
+        const value = e.target.value
+        e.target.value = ''
+
+        axios.post(
+            '/lists/create', {
+              title: value
+            }
+          )
+          .then((response) => {
+            console.log(response.data)
+            this.lists.push(response.data)
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      }
+    },
+    submitItem(e) {
+      if (e.keyCode === 13) {
+        const value = e.target.value
+        e.target.value = ''
+
+        axios.post(
+            '/lists/items/create', {
+              task: value,
+              list_id: this.currentList.id
+            }
+          )
+          .then((response) => {
+            console.log(response.data)
+            this.currentList.todo_items.push(response.data)
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      }
+    },
+    setCurrentList(i) {
+      this.currentList = this.lists[i]
+      console.log(this.currentList)
+      this.showList = true
+    },
+    toggleItem(i) {
+      const todoItem = this.currentList.todo_items[i]
+      axios.post(
+            '/lists/items/toggle', {
+              item_id: todoItem.id
+            }
+          )
+          .then((response) => {
+            this.currentList.todo_items[i].completed = response.data['completed']
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+    },
+    deleteItem(i) {
+      const todoItem = this.currentList.todo_items[i]
+      axios.post(
+            '/lists/items/delete', {
+              item_id: todoItem.id
+            }
+          )
+          .then((response) => {
+            this.currentList.todo_items.splice(i, 1)
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+    },
+    beforeEnter: function (el) {
+      el.style.opacity = 0
+      el.style.height = 0
+    },
+    enter: function (el, done) {
+      var delay = el.dataset.index * 150
+      setTimeout(function () {
+        Velocity(
+          el,
+          { opacity: 1, height: '1.6em' },
+          { complete: done }
+        )
+      }, delay)
+    },
+    leave: function (el, done) {
+      var delay = el.dataset.index * 150
+      setTimeout(function () {
+        Velocity(
+          el,
+          { opacity: 0, height: 0 },
+          { complete: done }
+        )
+      }, delay)
+    }
+  }
+})
+</script>
+{% endblock scripts %}
