@@ -1,5 +1,6 @@
-@import url(https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css);
-@import url(https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.min.css);
+@import url('https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.min.css');
+@import url('https://fonts.googleapis.com/css?family=Anonymous+Pro');
 
 [v-cloak] {
     display: none;
@@ -20,6 +21,14 @@ hr {
   background: #ccc;
 }
 
+.logo {
+  font-family: "Anonymous Pro", monospace;
+  text-align: center;
+  margin-bottom: 1rem;
+  margin-top: -1rem;
+}
+
+/* List view */
 #content {
   min-width: 500px;
   min-height: 500px;
@@ -63,6 +72,8 @@ hr {
   font-size: 1.5em;
 }
 
+
+/* Item view */
 .close:hover {
   cursor: pointer;
 }
@@ -102,6 +113,8 @@ hr {
   height: 1rem;
 }
 
+
+/* Transitions */
 .fade-enter-active, .fade-leave-active {
   transition: opacity .5s;
 }
